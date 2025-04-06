@@ -18,9 +18,11 @@ const ScatterPlot = () => {
     const currentRef = chartContainerRef.current;
     const resizeObserver = new ResizeObserver(entries => {
       for (const entry of entries) {
+        // Adjust height for mobile screens
+        const height = window.innerWidth < 768 ? 300 : 350;
         setDimensions({
           width: entry.contentRect.width,
-          height: 350
+          height: height
         });
       }
     });
@@ -45,8 +47,11 @@ const ScatterPlot = () => {
     // Clear previous chart
     d3.select(svgRef.current).selectAll("*").remove();
 
-    // Setup dimensions
-    const margin = { top: 40, right: 20, bottom: 70, left: 50 };
+    // Setup dimensions with responsive adjustments
+    const isMobile = window.innerWidth < 768;
+    const margin = isMobile 
+      ? { top: 30, right: 15, bottom: 60, left: 40 }
+      : { top: 40, right: 20, bottom: 70, left: 50 };
     const width = dimensions.width - margin.left - margin.right;
     const height = dimensions.height - margin.top - margin.bottom;
 
@@ -88,30 +93,31 @@ const ScatterPlot = () => {
     // Add X axis
     svg.append("g")
       .attr("transform", `translate(0,${height})`)
-      .call(d3.axisBottom(x))
+      .call(d3.axisBottom(x).ticks(isMobile ? 5 : 10))
       .selectAll("text")
-      .style("font-size", "10px");
+      .style("font-size", isMobile ? "8px" : "10px")
+      .attr("transform", isMobile ? "rotate(-15)" : "");
 
     // Add X axis label
     svg.append("text")
-      .attr("transform", `translate(${width/2}, ${height + margin.bottom - 20})`)
+      .attr("transform", `translate(${width/2}, ${height + (isMobile ? margin.bottom - 15 : margin.bottom - 20)})`)
       .style("text-anchor", "middle")
-      .style("font-size", "11px")
+      .style("font-size", isMobile ? "9px" : "11px")
       .text("Temperature (°C)");
 
     // Add Y axis
     svg.append("g")
-      .call(d3.axisLeft(y))
+      .call(d3.axisLeft(y).ticks(isMobile ? 5 : 10))
       .selectAll("text")
-      .style("font-size", "10px");
+      .style("font-size", isMobile ? "8px" : "10px");
 
     // Add Y axis label
     svg.append("text")
       .attr("transform", "rotate(-90)")
-      .attr("y", -margin.left + 15)
+      .attr("y", -margin.left + (isMobile ? 10 : 15))
       .attr("x", -height / 2)
       .attr("text-anchor", "middle")
-      .style("font-size", "11px")
+      .style("font-size", isMobile ? "9px" : "11px")
       .text("Humidity (%)");
 
     // Create a tooltip div
@@ -135,16 +141,16 @@ const ScatterPlot = () => {
       .append("circle")
       .attr("cx", d => x(d.temperature))
       .attr("cy", d => y(d.humidity))
-      .attr("r", 6)
+      .attr("r", isMobile ? 4 : 6)
       .attr("fill", d => colorScale(d.month))
       .attr("stroke", "#fff")
       .attr("stroke-width", 1.5)
       .attr("opacity", 0.8)
-      .on("mouseover", function(_event, d) {
+      .on("mouseover", function(event, d) {
         d3.select(this)
           .attr("stroke", "#000")
           .attr("stroke-width", 2)
-          .attr("r", 8)
+          .attr("r", isMobile ? 6 : 8)
           .attr("opacity", 1);
 
         tooltip.transition()
@@ -152,14 +158,14 @@ const ScatterPlot = () => {
           .style("opacity", 0.9);
         
         tooltip.html(`<strong>${d.month} ${d.year}</strong><br/>Temp: ${d.temperature}°C<br/>Humidity: ${d.humidity}%`)
-          .style("left", (_event.pageX + 10) + "px")
-          .style("top", (_event.pageY - 28) + "px");
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 28) + "px");
       })
       .on("mouseout", function() {
         d3.select(this)
           .attr("stroke", "#fff")
           .attr("stroke-width", 1.5)
-          .attr("r", 6)
+          .attr("r", isMobile ? 4 : 6)
           .attr("opacity", 0.8);
 
         tooltip.transition()
@@ -214,17 +220,19 @@ const ScatterPlot = () => {
       // Add trend line label
       const trendLabel = slope >= 0 ? "Positive correlation" : "Negative correlation";
       svg.append("text")
-        .attr("x", width - 140)
+        .attr("x", isMobile ? width - 100 : width - 140)
         .attr("y", 20)
         .attr("text-anchor", "start")
-        .style("font-size", "10px")
+        .style("font-size", isMobile ? "8px" : "10px")
         .style("font-style", "italic")
         .text(trendLabel);
     }
 
-    // Add legend
+    // Add legend with responsive positioning
     const legend = svg.append("g")
-      .attr("transform", `translate(${width - 100}, -150)`);
+      .attr("transform", isMobile 
+        ? `translate(${width - 70}, -130)` 
+        : `translate(${width - 100}, -150)`);
     
     // add year legend
     if (selectedYear === "All") {
@@ -241,18 +249,20 @@ const ScatterPlot = () => {
             .attr("x", 0)
             .attr("y", 10)
             .text(year.toString())
-            .style("font-size", "10px")
+            .style("font-size", isMobile ? "9px" : "10px")
             .style("font-weight", "bold");
         }
       });
     }
 
-    // Add month legend
+    // Add month legend with mobile optimization
     const presentMonths = Array.from(new Set(filteredData.map(d => d.month)))
       .sort((a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
     
-    // Organize legend in a grid if there are many months
-    const legendColumns = presentMonths.length > 6 ? 2 : 1;
+    // Organize legend in a grid with more columns on mobile
+    const legendColumns = isMobile 
+      ? (presentMonths.length > 4 ? 3 : 2)
+      : (presentMonths.length > 6 ? 2 : 1);
     const legendRows = Math.ceil(presentMonths.length / legendColumns);
     
     presentMonths.forEach((month, i) => {
@@ -260,17 +270,17 @@ const ScatterPlot = () => {
       const row = i % legendRows;
       
       const legendItem = legend.append("g")
-        .attr("transform", `translate(${column * 60}, ${row * 18})`);
+        .attr("transform", `translate(${column * (isMobile ? 40 : 60)}, ${row * (isMobile ? 15 : 18)})`);
       
       legendItem.append("circle")
-        .attr("r", 5)
+        .attr("r", isMobile ? 4 : 5)
         .attr("fill", colorScale(month));
       
       legendItem.append("text")
-        .attr("x", 10)
-        .attr("y", 4)
+        .attr("x", 8)
+        .attr("y", 3)
         .text(month)
-        .style("font-size", "9px");
+        .style("font-size", isMobile ? "7px" : "9px");
     });
 
     // Clean up tooltip when component unmounts
@@ -306,7 +316,7 @@ const ScatterPlot = () => {
         ref={chartContainerRef} 
         className="bg-white p-0 rounded-md shadow-sm overflow-hidden w-full"
       >
-        <svg ref={svgRef} width="100%" height="350"></svg>
+        <svg ref={svgRef} width="100%" height={window.innerWidth < 768 ? "300" : "350"}></svg>
       </div>
     </div>
   );
