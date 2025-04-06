@@ -3,13 +3,6 @@ import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { scatterPlotData } from "../data/dummy-data";
 
-interface ScatterDataPoint {
-  temperature: number;
-  humidity: number;
-  month: string;
-  year: number;
-}
-
 const ScatterPlot = () => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -147,7 +140,7 @@ const ScatterPlot = () => {
       .attr("stroke", "#fff")
       .attr("stroke-width", 1.5)
       .attr("opacity", 0.8)
-      .on("mouseover", function(event, d) {
+      .on("mouseover", function(_event, d) {
         d3.select(this)
           .attr("stroke", "#000")
           .attr("stroke-width", 2)
@@ -159,8 +152,8 @@ const ScatterPlot = () => {
           .style("opacity", 0.9);
         
         tooltip.html(`<strong>${d.month} ${d.year}</strong><br/>Temp: ${d.temperature}°C<br/>Humidity: ${d.humidity}%`)
-          .style("left", (event.pageX + 10) + "px")
-          .style("top", (event.pageY - 28) + "px");
+          .style("left", (_event.pageX + 10) + "px")
+          .style("top", (_event.pageY - 28) + "px");
       })
       .on("mouseout", function() {
         d3.select(this)
@@ -176,7 +169,7 @@ const ScatterPlot = () => {
 
     // Add trend line if enough data points
     if (filteredData.length > 1) {
-      // Calculate trend line using simple linear regression
+      // Calculate trend line 
       const xValues = filteredData.map(d => d.temperature);
       const yValues = filteredData.map(d => d.humidity);
       

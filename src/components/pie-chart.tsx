@@ -62,12 +62,6 @@ const PollutionChart = () => {
       ])
       .range(["#fd8d3c", "#bd0026"])
 
-    // City color scale
-    const cityColorScale = d3
-      .scaleOrdinal<string>()
-      .domain(stackedChartData.map((d) => d.name))
-      .range(["#1f77b4", "#ff7f0e", "#2ca02c"])
-
     // Create tooltip div
     const tooltip = d3
       .select("body")
@@ -129,7 +123,7 @@ const PollutionChart = () => {
         .attr("fill", fineParticlesColorScale(d.fineParticles))
         .attr("stroke", "white")
         .attr("stroke-width", 1)
-        .on("mouseover", (event) => {
+        .on("mouseover", () => {
           tooltip
             .style("visibility", "visible")
             .html(`<strong>${d.name}</strong><br/>Fine Particles: ${d.fineParticles} µg/m³`)
@@ -150,7 +144,7 @@ const PollutionChart = () => {
         .attr("fill", coarseParticlesColorScale(d.coarseParticles))
         .attr("stroke", "white")
         .attr("stroke-width", 1)
-        .on("mouseover", (event) => {
+        .on("mouseover", () => {
           tooltip
             .style("visibility", "visible")
             .html(`<strong>${d.name}</strong><br/>Coarse Particles: ${d.coarseParticles} µg/m³`)

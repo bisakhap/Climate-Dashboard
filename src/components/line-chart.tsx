@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useMemo } from "react"
 import * as d3 from "d3"
 import { lineChartData } from "../data/dummy-data"
 
@@ -18,7 +18,9 @@ const LineChart: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<string>("All Years")
   const [filteredData, setFilteredData] = useState<DataPoint[]>(lineChartData)
   const [dimensions, setDimensions] = useState({ width: 0, height: 350 })
-  const months = [
+  
+  // Use useMemo to prevent the months array from being recreated on every render
+  const months = useMemo(() => [
     "January",
     "February",
     "March",
@@ -31,8 +33,9 @@ const LineChart: React.FC = () => {
     "October",
     "November",
     "December",
-  ]
-  const years = ["2022", "2023"]
+  ], [])
+  
+  const years = useMemo(() => ["2022", "2023"], [])
 
   // Add resize observer to update chart size
   useEffect(() => {
@@ -73,7 +76,7 @@ const LineChart: React.FC = () => {
     }
 
     setFilteredData(newData)
-  }, [selectedMonth, selectedYear])
+  }, [selectedMonth, selectedYear, months])
 
   // Draw chart whenever data changes or dimensions update
   useEffect(() => {
@@ -223,12 +226,12 @@ const LineChart: React.FC = () => {
         .attr("class", `hover-${year}`)
         .attr("cx", (d) => (xScale(d.month.split(" ")[0]) ?? 0) + xScale.bandwidth() / 2)
         .attr("cy", (d) => yScale(d.temperature))
-        .attr("r", 0) // Start with radius 0
+        .attr("r", 0) 
         .attr("fill", "transparent")
         .transition()
         .duration(1500)
-        .delay((d, i) => i * 150) // Match the dots animation
-        .attr("r", 8) // Grow to final size
+        .delay((d, i) => i * 150) 
+        .attr("r", 8) 
         .on("end", function () {
           // Add event listeners after animation completes
           d3.select(this)
@@ -255,7 +258,7 @@ const LineChart: React.FC = () => {
         })
     })
 
-    // Add compact legend in top-right corner (matching bar chart style)
+    // Add legend in top-right corner 
     const legend = g.append("g").attr("transform", `translate(${width - 70}, -30)`)
 
     // Add background for legend
@@ -277,7 +280,7 @@ const LineChart: React.FC = () => {
 
       legendRow.append("text").attr("x", 20).attr("y", 10).text(year).style("font-size", "10px")
     })
-  }, [filteredData, dimensions])
+  }, [filteredData, dimensions, months])
 
   // Reset filters
   const resetFilters = () => {
@@ -329,7 +332,7 @@ const LineChart: React.FC = () => {
         </button>
       </div>
 
-      {/* Chart Container - matching bar chart */}
+      {/* Chart Container */}
       <div ref={containerRef} className="bg-white p-0 rounded-md shadow-sm overflow-hidden w-full">
         <svg ref={svgRef} width="100%" height="350"></svg>
       </div>
@@ -338,4 +341,3 @@ const LineChart: React.FC = () => {
 }
 
 export default LineChart
-
